@@ -1,9 +1,4 @@
 @import '~node_modules/modern-normalize/modern-normalize.css';
-
-.breed-select {
-  //   display: none;
-}
-
 .loader {
   display: none;
 }
@@ -24,4 +19,4 @@ img {
 
 .is-hidden {
   display: none;
-}
+}/*# sourceMappingURL=index.css.map */
