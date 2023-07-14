@@ -1,14 +1,14 @@
 @import '~node_modules/modern-normalize/modern-normalize.css';
-.loader {
-  display: none;
-}
-
+.loader,
 .error {
   display: none;
 }
 
 .cat-info {
+  margin-top: 20px;
   display: flex;
+  gap: 20px;
+  align-items: center;
 }
 
 img {

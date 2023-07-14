@@ -1,4 +1,6 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { Loading } from 'notiflix/build/notiflix-loading-aio';
+import SlimSelect from 'slim-select';
 import axios from 'axios';
 
 axios.defaults.headers.common['x-api-key'] =
@@ -17,17 +19,30 @@ const refs = {
 // const PATH_TO_CATS = 'https://api.thecatapi.com/v1/images/search';
 // const headers = { 'x-api-key': API_KEY };
 
-refs.selector.addEventListener('change', onSelect);
+// refs.selector.addEventListener('change', onSelect);
 
-fetchBreeds().then(fillSelector).catch(onError);
+const selector = new SlimSelect({
+  select: '.breed-select',
+  // settings: {
+  //   placeholderText: "Please choose the cat's breed",
+  // },
+});
+
+console.log(selector);
+
+fetchBreeds().then(fillSelector).catch(onError).finally(Loading.remove);
 
 function fetchBreeds() {
-  return axios('https://api.thecatapi.com/v1/breeds123').then(response => {
+  hideElement(refs.selector);
+  Loading.dots(refs.loader.textContent);
+  return axios('https://api.thecatapi.com/v1/breeds').then(response => {
     return response.data;
   });
 }
 
 function fetchCatByBreed(breedId) {
+  hideElement(refs.catInfo);
+  Loading.dots(refs.loader.textContent);
   return axios('https://api.thecatapi.com/v1/images/search', {
     params: {
       breed_ids: breedId,
@@ -37,29 +52,45 @@ function fetchCatByBreed(breedId) {
   });
 }
 
+// function fillSelector(cats) {
+//   console.log(cats);
+//   const markup = cats
+//     .map(cat => {
+//       return `<option value=${cat.id}>${cat.name}</option>`;
+//     })
+//     .join('');
+//   refs.selector.innerHTML = markup;
+//   showElement(refs.selector);
+// }
+
 function fillSelector(cats) {
-  const markup = cats
-    .map(cat => {
-      return `<option value=${cat.id}>${cat.name}</option>`;
-    })
-    .join('');
-  refs.selector.innerHTML = markup;
+  const markup = cats.map(cat => {
+    const value = cat.id;
+    const text = cat.name;
+    return { value, text };
+  });
+  selector.setData(markup);
+  showElement(refs.selector);
 }
 
 function onSelect(evt) {
   const id = evt.target.selectedIndex;
   const breedId = evt.target[id].value;
-  fetchCatByBreed(breedId).then(renderCatInfo).catch(onError);
+  fetchCatByBreed(breedId)
+    .then(renderCatInfo)
+    .catch(onError)
+    .finally(Loading.remove);
 }
 
 function renderCatInfo(cat) {
-  const markup = `<div><img src="${cat[0].url}" alt="${cat[0].breeds[0].name}" width="50 vw"></div>
+  const markup = `<div><img src="${cat[0].url}" alt="${cat[0].breeds[0].name}"></div>
   <div>
     <h2>${cat[0].breeds[0].name}</h2>
     <p>${cat[0].breeds[0].description}</p>
     <p><b>Temperament: </b>${cat[0].breeds[0].temperament}</p>
   </div>`;
   refs.catInfo.innerHTML = markup;
+  showElement(refs.catInfo);
 }
 
 function onError(error) {
@@ -67,4 +98,12 @@ function onError(error) {
     clickToClose: true,
   });
   console.log('Error', error.message);
+}
+
+function hideElement(element) {
+  element.classList.add('is-hidden');
+}
+
+function showElement(element) {
+  element.classList.remove('is-hidden');
 }
