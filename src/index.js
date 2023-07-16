@@ -14,8 +14,6 @@ const selector = new SlimSelect({
   },
 });
 
-hideElement(refs.selector);
-
 fetchBreeds()
   .then(fillSelector)
   .catch(onError)
