@@ -1,81 +1,49 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { Loading } from 'notiflix/build/notiflix-loading-aio';
 import SlimSelect from 'slim-select';
-import axios from 'axios';
+import 'slim-select/dist/slimselect.css';
+import { getRefs } from './references';
+import { fetchBreeds, fetchCatByBreed } from './cat-api';
 
-axios.defaults.headers.common['x-api-key'] =
-  'live_7Rf9BcnV4i4eiKBKMRakzNS7eOxCRIr6NvazIqIVZLnkU9rzsTENVPFHOqFo0RIU';
-
-const refs = {
-  selector: document.querySelector('.breed-select'),
-  loader: document.querySelector('.loader'),
-  error: document.querySelector('.error'),
-  catInfo: document.querySelector('.cat-info'),
-};
-
-// const API_KEY =
-//   'live_7Rf9BcnV4i4eiKBKMRakzNS7eOxCRIr6NvazIqIVZLnkU9rzsTENVPFHOqFo0RIU';
-// const PATH_TO_BREEDS = 'https://api.thecatapi.com/v1/breeds';
-// const PATH_TO_CATS = 'https://api.thecatapi.com/v1/images/search';
-// const headers = { 'x-api-key': API_KEY };
-
-// refs.selector.addEventListener('change', onSelect);
+const refs = getRefs();
 
 const selector = new SlimSelect({
   select: '.breed-select',
-  // settings: {
-  //   placeholderText: "Please choose the cat's breed",
-  // },
+  events: {
+    afterChange: onSelect,
+  },
 });
 
-console.log(selector);
+hideElement(refs.selector);
 
-fetchBreeds().then(fillSelector).catch(onError).finally(Loading.remove);
-
-function fetchBreeds() {
-  hideElement(refs.selector);
-  Loading.dots(refs.loader.textContent);
-  return axios('https://api.thecatapi.com/v1/breeds').then(response => {
-    return response.data;
+fetchBreeds()
+  .then(fillSelector)
+  .catch(onError)
+  .finally(() => {
+    Loading.remove;
+    showElement(refs.selector);
   });
-}
-
-function fetchCatByBreed(breedId) {
-  hideElement(refs.catInfo);
-  Loading.dots(refs.loader.textContent);
-  return axios('https://api.thecatapi.com/v1/images/search', {
-    params: {
-      breed_ids: breedId,
-    },
-  }).then(response => {
-    return response.data;
-  });
-}
-
-// function fillSelector(cats) {
-//   console.log(cats);
-//   const markup = cats
-//     .map(cat => {
-//       return `<option value=${cat.id}>${cat.name}</option>`;
-//     })
-//     .join('');
-//   refs.selector.innerHTML = markup;
-//   showElement(refs.selector);
-// }
 
 function fillSelector(cats) {
-  const markup = cats.map(cat => {
+  let markup = cats.map(cat => {
     const value = cat.id;
     const text = cat.name;
     return { value, text };
   });
+  markup.splice(0, 0, {
+    placeholder: true,
+    text: "Please choose the cat's breed",
+  });
   selector.setData(markup);
-  showElement(refs.selector);
 }
 
-function onSelect(evt) {
-  const id = evt.target.selectedIndex;
-  const breedId = evt.target[id].value;
+function onSelect(option) {
+  if (option[0].placeholder) {
+    Loading.remove();
+    return;
+  }
+  hideElement(refs.catInfo);
+  const breedId = option[0].value;
   fetchCatByBreed(breedId)
     .then(renderCatInfo)
     .catch(onError)
@@ -83,7 +51,9 @@ function onSelect(evt) {
 }
 
 function renderCatInfo(cat) {
-  const markup = `<div><img src="${cat[0].url}" alt="${cat[0].breeds[0].name}"></div>
+  const markup = `<div>
+    <img src="${cat[0].url}" alt="${cat[0].breeds[0].name}">
+  </div>
   <div>
     <h2>${cat[0].breeds[0].name}</h2>
     <p>${cat[0].breeds[0].description}</p>
@@ -97,7 +67,7 @@ function onError(error) {
   Notify.failure(refs.error.textContent, {
     clickToClose: true,
   });
-  console.log('Error', error.message);
+  console.log('Error message: ', error);
 }
 
 function hideElement(element) {
