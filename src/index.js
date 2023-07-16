@@ -7,12 +7,12 @@ import { fetchBreeds, fetchCatByBreed } from './cat-api';
 
 const refs = getRefs();
 
-const selector = new SlimSelect({
-  select: '.breed-select',
-  events: {
-    afterChange: onSelect,
-  },
-});
+// const selector = new SlimSelect({
+//   select: '.breed-select',
+//   events: {
+//     afterChange: onSelect,
+//   },
+// });
 
 fetchBreeds()
   .then(fillSelector)
@@ -31,6 +31,12 @@ function fillSelector(cats) {
   markup.splice(0, 0, {
     placeholder: true,
     text: "Please choose the cat's breed",
+  });
+  const selector = new SlimSelect({
+    select: '.breed-select',
+    events: {
+      afterChange: onSelect,
+    },
   });
   selector.setData(markup);
 }
